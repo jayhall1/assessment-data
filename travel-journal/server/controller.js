@@ -15,7 +15,7 @@ const sequelize = new Sequelize(CONNECTION_STRING, {
 
 // getCountries: (req, res) => {
 //     sequelize.query(``)
-}
+// }
 module.exports = {
     seed: (req, res) => {
         sequelize.query(`
@@ -27,12 +27,12 @@ module.exports = {
                 name varchar
             );
 
-            create table cc_cities (
+            create table cities (
                 city_id serial primary key,
                 name varchar(50),
                 rating integer,
-                country_id integer
-            )
+                country_id integer references countries(country_id)
+            );
 
             insert into countries (name)
             values ('Afghanistan'),
@@ -239,7 +239,43 @@ module.exports = {
         sequelize.query(`SELECT * FROM countries`)
             .then(dbResult => res.status(200).send(dbResult[0]))
             .catch(err => console.log(err))
-    }
+    },
+    createCity: (req, res) => {
+        const {name, rating, countryId} = req.body
+
+        sequlezize.query(` INSERT INTO cities (name, rating, country_id)
+        VALUES ('${name}', ${rating}, ${countryId});
+        `)
+        .then(dbResult => res.status(200).send(dbResult[0]))
+        .catch(err => {
+            res.status(400).send(`failed`)
+        })
+    },
+    getCities: (req, res) =>{
+        sequelize.query(`select city_id, c.name AS city, c.rating, c.country_id, co.name
+        FROM cities AS c
+            JOIN countries AS co
+            ON co.country_id = c.country_id;
+    `)
+    .then(dbResult => res.status(200).send(dbResult[0]))
+        .catch(err => {
+            res.status(400).send(`failed`)
+        
+    })
+
+}, 
+deleteCities: (req, res) => {
+    const{id} = req.params
+    id = parseInt(id);
+    sequelize.query(`DELETE
+    FROM cities
+    WHERE city_id = '${id}';
+    `)
+    .then(dbResult => res.status(200).send(dbResult[0]))
+    .catch(err => {
+        res.status(400).send(`failed`)
+    })
+}
 }
 
   
